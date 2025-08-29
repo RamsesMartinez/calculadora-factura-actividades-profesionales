@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="CFDI Calculator for invoice breakdown with VAT and withholdings. Professional tool for calculating subtotals and net amounts.">
+  <meta name="author" content="Ramses Martinez">
+  <meta name="keywords" content="calculator, CFDI, invoice, VAT, withholdings, income tax, Mexico, fiscal">
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://calculadora-cfdi.netlify.app/">
+  <meta property="og:title" content="CFDI Calculator - Net ⇄ Subtotal">
+  <meta property="og:description" content="Professional calculator for CFDI invoice breakdown with VAT and withholdings">
+  
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" content="https://calculadora-cfdi.netlify.app/">
+  <meta property="twitter:title" content="CFDI Calculator - Net ⇄ Subtotal">
+  <meta property="twitter:description" content="Professional calculator for CFDI invoice breakdown with VAT and withholdings">
+  
+  <title>CFDI Calculator - Net ⇄ Subtotal (VAT + Withholdings)</title>
+  
+  <!-- Preload critical resources -->
+  <link rel="preload" href="src/assets/css/styles.css" as="style" crossorigin>
+  <link rel="preload" href="src/assets/js/app.js" as="script" crossorigin>
+  
+  <!-- Styles -->
+  <link rel="stylesheet" href="src/assets/css/styles.css">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧮</text></svg>">
+  
+  <!-- Manifest for PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2b6cb0">
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <div class="header__top">
+        <div class="header__logo">CF</div>
+        <div class="language-selector">
+          <label for="language-select" class="language-selector__label">Language</label>
+          <select id="language-select" class="language-selector__select">
+            <option value="en">English</option>
+            <option value="es">Español</option>
+          </select>
+        </div>
+      </div>
+      <div class="header__content">
+        <h1>CFDI Calculator — Net ⇄ Subtotal (VAT + Withholdings)</h1>
+        <p class="header__description">
+          Calculate subtotal and breakdown for invoices with 16% VAT, 10% Income Tax withheld and 2/3 VAT Retention (10.666...%). 
+          Includes algebraic mode and line rounding method (Goal Seek).
+        </p>
+      </div>
+    </header>
+
+    <!-- Parameters form -->
+    <section class="card" aria-labelledby="parameters-title">
+      <h2 id="parameters-title" class="card__title">Parameters</h2>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="neto" class="form-label">Net amount received</label>
+          <input 
+            id="neto" 
+            type="number" 
+            step="0.01" 
+            value="9280.00" 
+            class="form-input"
+            placeholder="e.g. 9280.00"
+            aria-describedby="net-amount-help"
+          />
+          <div id="net-amount-help" class="form-help">
+            Amount that was deposited to you (already with withholdings applied).
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="subtotal" class="form-label">Subtotal (optional)</label>
+          <input 
+            id="subtotal" 
+            type="number" 
+            step="0.01" 
+            value="0" 
+            class="form-input"
+            placeholder="e.g. 10000.00"
+            aria-describedby="subtotal-help"
+          />
+          <div id="subtotal-help" class="form-help">
+            If you want to calculate from a known subtotal, enter it and press "Calculate from Subtotal".
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Rates (you can adjust)</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem;">
+            <input 
+              id="ivaRate" 
+              type="number" 
+              step="0.0001" 
+              value="0.16" 
+              class="form-input"
+              placeholder="VAT"
+              aria-label="VAT rate"
+            />
+            <input 
+              id="isrRate" 
+              type="number" 
+              step="0.0001" 
+              value="0.10" 
+              class="form-input"
+              placeholder="Income Tax"
+              aria-label="Income tax withheld rate"
+            />
+            <input 
+              id="retFrac" 
+              type="number" 
+              step="0.001" 
+              value="0.6666666667" 
+              class="form-input"
+              placeholder="VAT Ret"
+              aria-label="VAT retention fraction"
+            />
+          </div>
+          <div class="form-help">
+            VAT, Income Tax withheld, and VAT retention fraction (2/3 = 0.66666...)
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Calculation options</label>
+        <div class="checkbox-group">
+          <label class="checkbox-item">
+            <input id="useHighPrecision" type="checkbox" checked />
+            <span>Maintain high internal precision</span>
+          </label>
+          <label class="checkbox-item">
+            <input id="roundPerLine" type="checkbox" checked />
+            <span>Round taxes per line to 2 decimal places (simulate invoicing software)</span>
+          </label>
+          <label class="checkbox-item">
+            <input id="showSteps" type="checkbox" />
+            <span>Show detailed steps (console)</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="btn-group">
+        <button id="calcFromSubtotal" class="btn btn--primary">
+          Calculate from Subtotal
+        </button>
+        <button id="algebraicFromNeto" class="btn btn--secondary">
+          Calculate Subtotal (Direct formula)
+        </button>
+        <button id="goalSeekFromNeto" class="btn btn--ghost">
+          Goal Seek (respects rounding)
+        </button>
+        <button id="reset" class="btn btn--danger">
+          Reset
+        </button>
+      </div>
+      
+      <div class="form-help mt-3">
+        <strong>Note:</strong> "Direct formula" uses the algebraic equation without intermediate rounding. 
+        "Goal Seek" adjusts the subtotal until the calculated net amount (with rounding) matches the target net amount.
+      </div>
+    </section>
+
+    <!-- Results -->
+    <section class="card" aria-live="polite">
+      <h2 class="card__title">Result</h2>
+
+      <div class="results" id="resultPanel">
+        <div class="result-item">
+          <div class="result-item__label">Subtotal</div>
+          <div class="result-item__value" id="outSubtotal">-</div>
+        </div>
+        <div class="result-item">
+          <div class="result-item__label">VAT charged</div>
+          <div class="result-item__value" id="outIVA">-</div>
+        </div>
+        <div class="result-item">
+          <div class="result-item__label">Income Tax withheld</div>
+          <div class="result-item__value" id="outISR">-</div>
+        </div>
+        <div class="result-item">
+          <div class="result-item__label">VAT Retention (2/3)</div>
+          <div class="result-item__value" id="outRetIVA">-</div>
+        </div>
+        <div class="result-item">
+          <div class="result-item__label">Calculated net</div>
+          <div class="result-item__value" id="outNeto">-</div>
+        </div>
+      </div>
+
+      <div class="btn-group">
+        <button id="copyJson" class="btn btn--secondary">
+          Copy JSON
+        </button>
+        <button id="downloadCsv" class="btn btn--secondary">
+          Download CSV
+        </button>
+      </div>
+
+      <details class="log-container">
+        <summary>View steps / log</summary>
+        <pre id="log" class="log-content">Steps will appear here if you check "Show detailed steps".</pre>
+      </details>
+    </section>
+
+    <!-- Information notes -->
+    <section class="card">
+      <h2 class="card__title">Quick notes</h2>
+      <ul style="line-height: 1.6; color: var(--color-gray-700);">
+        <li>Invoicing software usually rounds each tax to 2 decimal places per line; that's why the difference with the continuous formula.</li>
+        <li>The algebraic formula is useful as a first approximation. Goal Seek/Seeker corrects the subtotal so the net amount balances exactly when applying rounding.</li>
+        <li>You can adjust the rates at the top if rules change or if you work with a different withholding percentage.</li>
+      </ul>
+    </section>
+
+    <!-- Footer -->
+    <footer class="card" style="text-align: center; margin-top: 2rem;">
+      <p class="text-muted">
+        Developed with ❤️ by <a href="https://github.com/ramthedev" target="_blank" rel="noopener" style="color: var(--color-primary);">Ramses Martinez</a>
+      </p>
+      <p class="text-muted" style="font-size: 0.875rem; margin-top: 0.5rem;">
+        Free tool for professionals. We do not guarantee the accuracy of calculations.
+      </p>
+    </footer>
+  </div>
+
+  <!-- Scripts -->
+  <script type="module" src="src/assets/js/app.js"></script>
+  
+  <!-- Fallback for browsers without module support -->
+  <script nomodule>
+    document.body.innerHTML = `
+      <div style="text-align: center; padding: 2rem; font-family: Arial, sans-serif;">
+        <h1>Browser not compatible</h1>
+        <p>This application requires a modern browser with ES6 module support.</p>
+        <p>Please update your browser or use Chrome, Firefox, Safari or Edge.</p>
+      </div>
+    `;
+  </script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+{
+  "name": "cfdi-calculator",
+  "version": "1.0.0",
+  "description": "Professional calculator for CFDI invoice breakdown with VAT and withholdings",
+  "main": "index.html",
+  "scripts": {
+    "dev": "node scripts/dev.js",
+    "dev:simple": "live-server --port=0 --open=/index.html",
+    "dev:3000": "live-server --port=3000 --open=/index.html",
+    "dev:8080": "live-server --port=8080 --open=/index.html",
+    "deploy": "netlify deploy --prod",
+    "deploy:preview": "netlify deploy --dir=.",
+    "build": "echo 'Static site - no build required'",
+    "test": "echo 'No tests specified'",
+    "lint": "echo 'No linter configured'"
+  },
+  "keywords": [
+    "calculator",
+    "cfdi",
+    "invoice",
+    "vat",
+    "withholdings",
+    "income-tax",
+    "mexico",
+    "fiscal",
+    "professional",
+    "pwa"
+  ],
+  "author": "Ramses Martinez",
+  "license": "MIT",
+  "devDependencies": {
+    "live-server": "^1.2.2"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/RamsesMartinez/calculadora-factura-actividades-profesionales.git"
+  },
+  "bugs": {
+    "url": "https://github.com/RamsesMartinez/calculadora-factura-actividades-profesionales/issues"
+  },
+  "homepage": "https://calculadora-iva-isr.netlify.app"
+}
